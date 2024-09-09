@@ -58,11 +58,11 @@ int lookup(hash_table* h, int value) {
 
     // Se a posição não está preenchida, então ela está deletada
     // ou vazia, de toda forma, o valor não está na tabela.
-    if (!(h->T1[index].tag == FILLED)) return -1;  
+    if (h->T1[index].tag == EMPTY) return -1;  
 
-    // Se o valor não está em T1...
-    if (!(h->T1[index].value == value)) {
-
+    // Se o valor não está em T1 e o valor não foi excluído...
+    if (!(h->T1[index].value == value) && h->T1[index].tag != EXCLUDED) {
+        
         // ele está em T2
         index = HASH2(value, h->size);
     }
@@ -77,7 +77,7 @@ void insert(hash_table* h, int value) {
 
     int index = HASH1(value, h->size);
 
-    if (h->T1[index].tag == FILLED) {
+    if (h->T1[index].tag == FILLED && h->T1[index].value != value) {
         // Move o valor existente de T1 para T2 usando a função hash2
         int new_index = HASH2(h->T1[index].value, h->size);
         h->T2[new_index].value = h->T1[index].value;
@@ -95,7 +95,7 @@ void exclude(hash_table* h, int value) {
     int index = lookup(h, value);  // Usa lookup para encontrar o valor
 
     if (index == -1) {
-        cout << "Value not found, cannot exclude." << endl;
+        //cerr << "Value " << value << " not found, cannot exclude." << endl;
         return;  // Valor não encontrado, não faz nada
     }
 

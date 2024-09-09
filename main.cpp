@@ -20,16 +20,19 @@ void process_commands(hash_table* h) {
         switch (operation) {
             case 'i':  // Inserir
                 insert(h, value);
+
+                // DEBUG ONLY
+                // printf("Inseriu %d\n", value);
+                // print_hash_table_debug(h);
+                // printf("\n");
                 break;
             case 'r':  // Remover
                 exclude(h, value);
-                break;
-            case 'l':  // Buscar
-                int output = lookup(h, value);
 
-                if (output == -1) {
-                    cerr << "Value not found." << endl;
-                }
+                // DEBUG ONLY
+                // printf("removeu %d\n", value);
+                // print_hash_table_debug(h);
+                // printf("\n");
                 break;
         }
     }
