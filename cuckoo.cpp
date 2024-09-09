@@ -10,23 +10,24 @@
 ************************************************************************/
 #include "cuckoo.hpp"
 
-#define SIZE 11
+/***********************************************************************/
 
 int init_hash(hash_table* h, uint size) {
     h->size = size;
-    h->T1 = new entry[h->size];
+    h->T1 = new entry[h->size]; // aloca memória de tamanho size
 
     if (!h->T1) {
-        cerr << "Couldn't allocate memory for T1." << endl;
+        cerr << "Couldn't allocate memory for T1." << endl; // erro se falhar a alocação
         exit(MEM_ERROR);
     }
 
     h->T2 = new entry[h->size];
     if (!h->T2) {
-        cerr << "Couldn't allocate memory for T2." << endl;
+        cerr << "Couldn't allocate memory for T2." << endl; // erro se falhar a alocação
         exit(MEM_ERROR);
     }
 
+    // Inicializa todas as entradas como vazias e valores como 0
     for (uint i = 0; i < size; i++) {
         h->T1[i].tag = EMPTY;
         h->T2[i].tag = EMPTY;
@@ -37,9 +38,12 @@ int init_hash(hash_table* h, uint size) {
     return 1;
 }
 
-void destroy_hash(hash_table* h) {
-    h->size = 0;
+/***********************************************************************/
 
+void destroy_hash(hash_table* h) {
+    h->size = 0; // zera o tamanho
+    
+    // Desaloca memória e nulifica ponteiro
     delete[] h->T1;
     h->T1 = nullptr;
 
@@ -47,16 +51,27 @@ void destroy_hash(hash_table* h) {
     h->T2 = nullptr;
 }
 
+/***********************************************************************/
+
 int lookup(hash_table* h, int value) {
     int index = HASH1(value, h->size);
 
-    if (!h->T1[index].tag == FILLED) return -1;
+    // Se a posição não está preenchida, então ela está deletada
+    // ou vazia, de toda forma, o valor não está na tabela.
+    if (!(h->T1[index].tag == FILLED)) return -1;  
 
+    // Se o valor não está em T1...
     if (!(h->T1[index].value == value)) {
+
+        // ele está em T2
         index = HASH2(value, h->size);
     }
+
+    // Retorna o índice
     return index;
 }
+
+/***********************************************************************/
 
 void insert(hash_table* h, int value) {
 
@@ -74,6 +89,8 @@ void insert(hash_table* h, int value) {
     h->T1[index].tag = FILLED;
 }
 
+/***********************************************************************/
+
 void exclude(hash_table* h, int value) {
     int index = lookup(h, value);  // Usa lookup para encontrar o valor
 
@@ -83,47 +100,74 @@ void exclude(hash_table* h, int value) {
     }
 
     // Verifica se está em T1 ou T2 e marca como excluído
-    if (index == HASH1(value, h->size) && h->T1[index].value == value) {
-        h->T1[index].tag = EXCLUDED;
-    } else if (index == HASH2(value, h->size) && h->T2[index].value == value) {
+    if (index == HASH2(value, h->size) && h->T2[index].value == value) {
         h->T2[index].tag = EXCLUDED;
+    } else if (index == HASH1(value, h->size) && h->T1[index].value == value) {
+        h->T1[index].tag = EXCLUDED;
     }
 }
 
-void process_commands(hash_table* h) {
-    char operation;
-    int value;
+/***********************************************************************/
 
-    while (scanf(" %c %d", &operation, &value) == 2) {
-        switch (operation) {
-            case 'i':  // Inserir
-                insert(h, value);
-                break;
-            case 'r':  // Remover
-                exclude(h, value);
-                break;
-            case 'l':  // Buscar
-                int output = lookup(h, value);
+void print_hash_table(const hash_table* h) {
+    vector<tuple<int, string, int>> entries;  // (valor, tabela, índice)
 
-                if (output == -1) {
-                    cerr << "Value not found." << endl;
-                }
-                break;
+    // Adiciona entradas de T1
+    for (int i = 0; i < h->size; ++i) {
+        const entry& e = h->T1[i];
+        if (e.tag == FILLED) {
+            entries.emplace_back(e.value, "T1", i);
         }
     }
-    print_hash_table(h);
+
+    // Adiciona entradas de T2
+    for (int i = 0; i < h->size; ++i) {
+        const entry& e = h->T2[i];
+        if (e.tag == FILLED) {
+            entries.emplace_back(e.value, "T2", i);
+        }
+    }
+
+    // Ordena entradas pelo valor
+    sort(entries.begin(), entries.end(), [](const tuple<int, string, int>& a, const tuple<int, string, int>& b) {
+        return get<0>(a) < get<0>(b);
+    });
+
+    // Imprime entradas ordenadas
+    for (const auto& entry : entries) {
+        cout << get<0>(entry) << "," << get<1>(entry) << "," << get<2>(entry) << endl;
+    }
 }
 
-int main() {
+/***********************************************************************/
 
+const char* tag_to_string(int tag) {
+    switch (tag) {
+        case FILLED: return "FILLED";
+        case EMPTY: return "EMPTY";
+        case EXCLUDED: return "EXCLUDED";
+        default: return "UNKNOWN";
+    }
+}
 
-    hash_table cuckoo;
-    
-    init_hash(&cuckoo, SIZE);
+/***********************************************************************/
 
-    process_commands(&cuckoo);
+// Função para printar a tabela hash
+// Faz uma tupla de posição, valor e estado
+void print_hash_table_debug(const hash_table* h) {
+    cout << "Table T1:" << endl;
+    for (int i = 0; i < h->size; ++i) {
+        const entry& e = h->T1[i];
+        cout << "Position " << i << ": "
+                  << "Value = " << e.value << ", "
+                  << "Status = " << tag_to_string(e.tag) << endl;
+    }
 
-    destroy_hash(&cuckoo);
-
-    return 0;
+    cout << "Table T2:" << endl;
+    for (int i = 0; i < h->size; ++i) {
+        const entry& e = h->T2[i];
+        cout << "Position " << i << ": "
+        << "Value = " << e.value << ", "
+        << "Status = " << tag_to_string(e.tag) << endl;
+    }
 }

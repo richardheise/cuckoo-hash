@@ -3,8 +3,8 @@
 # Variáveis
 CXX = g++
 CXXFLAGS = -Wall
-TARGET = cuckoo
-OBJECTS = cuckoo.o
+TARGET = myht
+OBJECTS = main.o cuckoo.o
 
 # Regra principal
 all: $(TARGET)
@@ -13,7 +13,11 @@ all: $(TARGET)
 $(TARGET): $(OBJECTS)
 	$(CXX) $(CXXFLAGS) -o $(TARGET) $(OBJECTS)
 
-# Compilação dos arquivos .cpp
+# Compilação de main.cpp
+main.o: main.cpp cuckoo.hpp
+	$(CXX) $(CXXFLAGS) -c main.cpp
+
+# Compilação de cuckoo.cpp
 cuckoo.o: cuckoo.cpp cuckoo.hpp
 	$(CXX) $(CXXFLAGS) -c cuckoo.cpp
 

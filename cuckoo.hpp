@@ -16,16 +16,24 @@
 #include <algorithm> 
 #include <tuple>     
 
+// Literalmente ninguém deixa de fazer isso
 using namespace std;
 
+/*********************************************************************
+ * Estruturas do código
+*********************************************************************/
+
+// Controle de inclusão
 #ifndef __CUCKOO__
 #define __CUCKOO__
 
+// Códigos de retorno de erro
 #define MEM_ERROR -1
 
+// Estados possíveis das entradas das tabelas
 enum EntryStatus {
     FILLED,    // Espaço preenchido
-    EMPTY,    // Entrada válida
+    EMPTY,    // Entrada vazia
     EXCLUDED   // Entrada excluída
 };
 
@@ -33,78 +41,51 @@ enum EntryStatus {
 #define HASH1(k, m) ((k) % (m))
 #define HASH2(k, m) (static_cast<int>(floor((m) * (fmod((k) * 0.9, 1.0)))))
 
+// Uma entrada na tabela possui valor e estado (vazio, preenchido, excluído)
 struct entry {
     int value;
     int tag;
 };
 
+// Nossa hash table tem duas tabelas T1 e T2, além de um tamanho compartilhado
 struct hash_table {
     int size;
     entry* T1;
     entry* T2;
 };
 
-const char* tag_to_string(int tag) {
-    switch (tag) {
-        case FILLED: return "FILLED";
-        case EMPTY: return "EMPTY";
-        case EXCLUDED: return "EXCLUDED";
-        default: return "UNKNOWN";
-    }
-}
 
-void print_hash_table_debug(const hash_table* h) {
-    cout << "Table T1:" << endl;
-    for (int i = 0; i < h->size; ++i) {
-        const entry& e = h->T1[i];
-        cout << "Position " << i << ": "
-                  << "Value = " << e.value << ", "
-                  << "Status = " << tag_to_string(e.tag) << endl;
-    }
+/*********************************************************************
+ * Depuração
+*********************************************************************/
 
-    cout << "Table T2:" << endl;
-    for (int i = 0; i < h->size; ++i) {
-        const entry& e = h->T2[i];
-        cout << "Position " << i << ": "
-        << "Value = " << e.value << ", "
-        << "Status = " << tag_to_string(e.tag) << endl;
-    }
-}
+// Função que transforma um estado em string, usada para debug
+const char* tag_to_string(int tag);
 
-void print_hash_table(const hash_table* h) {
-    vector<tuple<int, string, int>> entries;  // (valor, tabela, índice)
+// Função para printar a tabela hash
+// Faz uma tupla de posição, valor e estado
+void print_hash_table_debug(const hash_table* h);
 
-    // Adiciona entradas de T1
-    for (int i = 0; i < h->size; ++i) {
-        const entry& e = h->T1[i];
-        if (e.tag == FILLED) {
-            entries.emplace_back(e.value, "T1", i);
-        }
-    }
+/*********************************************************************
+ * Funções de hash
+*********************************************************************/
 
-    // Adiciona entradas de T2
-    for (int i = 0; i < h->size; ++i) {
-        const entry& e = h->T2[i];
-        if (e.tag == FILLED) {
-            entries.emplace_back(e.value, "T2", i);
-        }
-    }
+// Printa a tabela hash no formato exigido pelo trabalho (valor, tabela, posição)
+void print_hash_table(const hash_table* h);
 
-    // Ordena entradas pelo valor
-    sort(entries.begin(), entries.end(), [](const tuple<int, string, int>& a, const tuple<int, string, int>& b) {
-        return get<0>(a) < get<0>(b);
-    });
-
-    // Imprime entradas ordenadas
-    for (const auto& entry : entries) {
-        cout << get<0>(entry) << "," << get<1>(entry) << "," << get<2>(entry) << endl;
-    }
-}
-
+// Inicializa uma estrutura hash
 int init_hash(hash_table* h, uint size);
+
+// Libera memória e de zera o tamanho de uma estrutura hash
 void destroy_hash(hash_table* h);
+
+// Função de busca do elemento value na tabela hash
 int lookup(hash_table* h, int value);
+
+// Função de inserção do elemento value na tabela hash
 void insert(hash_table* h, int value);
+
+// Função de exclusão do elemento value na tabela hash
 void exclude(hash_table* h, int value);
 
 #endif
