@@ -78,6 +78,11 @@ void insert(hash_table* h, int value) {
     int index = HASH1(value, h->size);
 
     if (h->T1[index].tag == FILLED && h->T1[index].value != value) {
+
+        if (h->T2[HASH2(value,h->size)].value == value) { // valor já inserido 
+            return;
+        }
+
         // Move o valor existente de T1 para T2 usando a função hash2
         int new_index = HASH2(h->T1[index].value, h->size);
         h->T2[new_index].value = h->T1[index].value;

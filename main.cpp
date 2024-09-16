@@ -34,6 +34,16 @@ void process_commands(hash_table* h) {
                 // print_hash_table_debug(h);
                 // printf("\n");
                 break;
+            case 'l': // buscar
+                lookup(h, value);
+
+                // DEBUG ONLY
+                // printf("buscou %d\n", value);
+                // print_hash_table_debug(h);
+                // printf("\n");
+                break;
+            default:
+                cerr << "Invalid input" << endl;
         }
     }
     print_hash_table(h);
